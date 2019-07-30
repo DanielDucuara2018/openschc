@@ -449,7 +449,7 @@ class ReassemblerAckOnError(ReassembleBase):
         print('state DONE -> {}'.format(self.state))
         #input('DONE')
         # decompression
-        print("----------------------- Decompression -----------------------")
+        #print("----------------------- Decompression -----------------------")
         self.protocol.process_decompress(self.context, self.sender_L2addr,
                                          schc_packet)
         # ACK message

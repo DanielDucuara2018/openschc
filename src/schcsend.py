@@ -267,14 +267,15 @@ class FragmentAckOnError(FragmentBase):
         #input("")
 
     def send_frag(self):
+        if self.state == self.ACK_SUCCESS:
+            print("-----------------------------------------------------------------------")
+            return
         print("----------------------- Preparing to send a message -----------------------")
         print("{} send_frag!!!!!!!!!!!!!!!!!".format(time.time()))#utime.time()
         print("all1_send-> {}, resend -> {}, state -> {}".format(self.all1_send, self.resend,self.state))
         print("all tiles unsend -> {}".format(self.all_tiles))
         for tile in self.all_tiles.get_all_tiles():
             print("w: {}, t: {}, sent: {}".format(tile['w-num'],tile['t-num'],tile['sent']))
-        if self.state == self.ACK_SUCCESS:
-            return
         print("")
         # if self.state == self.ACK_FAILURE and self.num_of_windows != 1 and self.number_of_ack_waits <= self.num_of_windows:
         #     #waiting for the acks of the others windows
@@ -571,6 +572,11 @@ class FragmentAckOnError(FragmentBase):
                     self.rule.ruleID, self.dtag))
             #self.resend = False
             self.state = self.ACK_SUCCESS
+            f = open("client_server_simulation.txt", "a+")
+            seconds = time. time()
+            #local_time = time.ctime(seconds)
+            f.write("%d\r\n" % seconds)
+            f.close()
             return
         if schc_frag.cbit == 0:
             print("----------------------- ACK Failure rid={} dtag={} -----------------------".format(

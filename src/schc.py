@@ -28,7 +28,9 @@ class Session:
         if self.get(rule_id, rule_id_size, dtag) is not None:
             print("ERROR: the session rid={}/{} dtag={} exists already".format(
                     rule_id, rule_id_size, dtag))
-            return False
+            self.session_list = []
+            #return False
+
         self.session_list.append({"rule_id": rule_id,
                                   "rule_id_size": rule_id_size, "dtag": dtag,
                                   "session": session })
@@ -81,6 +83,7 @@ class SCHCProtocol:
         rule = context["comp"]        
         print("----------------------- Compression Process ----------------------------")
         self._log("compression rule_id={}".format(rule.ruleID))
+        #print("compression rule_id={}".format(rule.ruleID))
         # XXX needs to handl the direction
         #NEED TO BE FIX -> there is an error when packets are larger than 250B
         #The assert in the funcion __add__ of bitarray.py line 257 gives an 
@@ -101,6 +104,7 @@ class SCHCProtocol:
         print("----------------------- Fragmentation Rule -----------------------")
         rule = context["fragSender"]
         self._log("fragmentation rule_id={}".format(rule.ruleID))
+        #print("fragmentation rule_id={}".format(rule.ruleID))
         session = self.new_fragment_session(context, rule)
         session.set_packet(packet_bbuf)
         self.fragment_session.add(rule.ruleID, rule.ruleLength,
@@ -135,6 +139,7 @@ class SCHCProtocol:
 
     def schc_recv(self, dev_L2addr, raw_packet):
         self._log("recv-from-L2 {} {}".format(dev_L2addr, raw_packet))
+        #print("recv-from-L2 {} {}".format(dev_L2addr, raw_packet))
         # find context for the SCHC processing.
         # XXX
         # the receiver never knows if the packet from the device having the L2
@@ -147,6 +152,7 @@ class SCHCProtocol:
                     dev_L2addr))
             return
         # find a rule in the context for this packet.
+        print("raw_packet  ", raw_packet)
         packet_bbuf = BitBuffer(raw_packet)
         key, rule = self.rule_manager.find_rule_bypacket(context, packet_bbuf)
         print('key,rule {},{}'.format(key,rule))
@@ -202,7 +208,9 @@ class SCHCProtocol:
             raise SystemError("should not come here.")
 
     def process_decompress(self, context, dev_L2addr, schc_packet):
+        print("----------------------- Decompression -----------------------")
         self._log("compression rule_id={}".format(context["comp"]["ruleID"]))
+        #print("compression rule_id={}".format(context["comp"]["ruleID"]))
         raw_packet = self.decompressor.decompress(context, schc_packet)
-        args = (dev_L2addr, raw_packet)
-        self.scheduler.add_event(0, self.layer3.recv_packet, args)
+        #args = (dev_L2addr, raw_packet)
+        #self.scheduler.add_event(0, self.layer3.recv_packet, args)

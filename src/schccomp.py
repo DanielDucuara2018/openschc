@@ -219,8 +219,8 @@ class Compressor:
         if input_bbuf.count_remaining_bits() > 0:
             output_bbuf += input_bbuf
         # if all process have been succeeded, return the data.
-        self.protocol._log("compress: {}=>{}".format(
-            packet_bbuf, output_bbuf))
+        # self.protocol._log("compress: {}=>{}".format(packet_bbuf, output_bbuf))
+        print("compress: {}=>{}".format(packet_bbuf, output_bbuf))
         return output_bbuf
 
 #---------------------------------------------------------------------------

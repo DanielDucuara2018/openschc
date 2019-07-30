@@ -8,6 +8,7 @@ from base_import import *
 from simsched import SimulScheduler as Scheduler
 from simlayer2 import SimulLayer2
 from cond_true import ConditionalTrue
+#import schcsend as schcsend
 
 try:
     import utime as time
@@ -28,17 +29,16 @@ class SimulLayer3:
     __v6addr_prefix = "2001:0db8:85a3:0000:0000:0000:0000:000"
     __v6addr_base = 0
 
-    def __init__(self, sim):
+    def __init__(self, sim = None):
         self.sim = sim
         self.protocol = None
         self.L3addr = SimulLayer3.__get_unique_addr()        
 
     def send_later(self, rel_time, dst_L3addr, raw_packet):
-        self._log("send-later Devaddr={} Packet={}".format(
-                dst_L3addr, b2hex(raw_packet)))
-        self.sim.scheduler.add_event(
-            rel_time, self.protocol.schc_send,
-            (dst_L3addr, raw_packet,))
+        self._log("send-later Devaddr={} Packet={}".format(dst_L3addr, b2hex(raw_packet)))
+        self.sim.scheduler.add_event(rel_time, self.protocol.schc_send,(dst_L3addr, raw_packet,))
+        #print("send-later -> {} {}".format(dst_L3addr, raw_packet.hex()))
+        #self.protocol.scheduler.add_event(rel_time, self.protocol.schc_send,(dst_L3addr, raw_packet))
 
     # XXX need to confirm whether this should be here or not.
     def recv_packet(self, dev_L2addr, raw_packet):
@@ -96,6 +96,12 @@ class SimulNullNode(SimulNode):
 
 class Simul:
     def __init__(self, simul_config = {}):
+        self.ACK_SUCCESS = "ACK_SUCCESS"
+        self.ACK_FAILURE = "ACK_FAILURE"
+        self.RECEIVER_ABORT = "RECEIVER_ABORT"
+        self.SEND_ALL_1 = "SEND_ALL_1"
+        self.WAITING_FOR_ACK = "WAITING_FOR_ACK"
+
         self.simul_config = simul_config
         self.node_table = {}
         self.link_set = set()
@@ -104,6 +110,7 @@ class Simul:
         self.log_file = None
         self.frame_loss = ConditionalTrue(
                 **self.simul_config.get("loss", {"mode":"cycle"}))
+
 
     def set_log_file(self, filename):
         self.log_file = open(filename, "w")
@@ -161,6 +168,70 @@ class Simul:
             #args = callback_args
             callback(*args)
         return count
+
+    def send_packetX(self, packet, src_id, dst_id=None, callback=None, callback_args=tuple()):
+        """send a message to another device"""
+        self._log("----------------------- SEND PACKET -----------------------")
+        if not self.frame_loss.check(len(packet)):
+            self._log("----------------------- OK -----------------------")
+            self._log("send-packet {}->{} {}".format(src_id, dst_id, packet))
+            if enable_statsct:
+                Statsct.log("send-packet {}->{} {}".format(src_id, dst_id, packet))
+                Statsct.add_packet_info(packet,src_id,dst_id, True)
+            # if dst_id == None, it is a broadcast
+            # link_list = self.get_link_by_id(src_id, dst_id)
+            count = 1
+            # for link in link_list:
+            #     count += self.send_packet_on_link(link, packet)
+            self.node_table[0].protocol.layer2.clientConnection.send(packet)
+            try:
+                state = self.node_table[0].protocol.fragment_session.session_list[0]["session"].state
+                print("STATE : ", state)
+                if state == self.SEND_ALL_1:
+                    messageRecvd = self.node_table[0].protocol.layer2.clientConnection.Receive()
+                    print(messageRecvd)
+                    self.node_table[0].protocol.layer2.event_receive_packet(self.node_table[0].id, messageRecvd)
+            except:
+                print("Not fragment state")
+        else:
+            self._log("----------------------- KO -----------------------")
+            self._log("packet was lost {}->{}".format(src_id, dst_id))
+            if enable_statsct:
+                Statsct.log("packet was lost {}->{} {}".format(src_id, dst_id, packet))
+                Statsct.add_packet_info(packet,src_id,dst_id, False)
+            count = 0
+        #
+        if callback != None:
+            args = callback_args + (count,) # XXX need to check. - CA:
+            # [CA] the 'count' is now passed as 'status' in:
+            #  SimulLayer2._event_sent_callback(self, transmit_callback, status
+            # the idea is that is transmission fails, at least you can pass
+            # count == 0 (status == 0), and you can do something there.
+            # (in general case, some meta_information need to be sent)
+
+            #args = callback_args
+            callback(*args)
+        return count
+
+
+
+        # #receive = True
+        # print("----------------------- SEND PACKET -----------------------")
+        # print("Sent packet: ",packet.hex())
+        # print("Listen to receive data? : ",receive)
+        # #print('*****Recepcion requerida: ', receive)
+        # received = self.lora.send(packet.hex(), receive = receive, verbosity = 2)
+        # if receive:
+        #     if received != None and len(received) > 0 :
+        #         received = received.replace(" ","")
+        #         received = bytes.fromhex(received)
+        #         print('Received in layer 2:',received)
+        #         self.event_receive_packet(dst_id, received)
+        # if callback != None:
+        #     count = 1
+        #     args = callback_args+(count,)
+        #     callback(*args)
+        # return count
 
     def send_packet_on_link(self, link, packet):
         node_to = self.node_table[link.to_id]
