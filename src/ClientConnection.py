@@ -1,59 +1,57 @@
-from time import sleep
+from base_import import *
+
+import SchcConfig
+import stats.statsct
+import ClientSend
+
 import socket
+from time import sleep
 
-class ClientConnection():
+class ClientConnection:
 
+	def __init__(self, role, ipServer, portServer, size_message, l2_mtu):
+		self.size_message = size_message
+		self.size_l2_mtu = l2_mtu
+		self.role = role
+		self.ipServer = ipServer
+		self.portServer = portServer
+		self.socketClientConnection = None
+		self.clientConfig = None
+		self.clientSend = None
 
-    def __init__(self,ip, portIp):
-      self.soc = None
-      self.ip = ip
-      self.portIp = portIp
-      self.socketcomunication()
+	def connection(self):
+		self.socketClientConnection = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+		# connect to server on local computer
+		print("Waiting for a server")
+		while self.socketClientConnection.connect_ex((self.ipServer, self.portServer)) != 0:
+			sleep(0.1)
+		print("Conneted to server")
+		self.clientSend = ClientSend.ClientSend(self.socketClientConnection)
 
-    def socketcomunication(self):
-      self.soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-      # self.soc.connect((ip, port))
-      print("Waiting for a server")
-      while self.soc.connect_ex((self.ip, self.portIp)) != 0:
-        sleep(0.1)
-      print("Conneted to server")
+	def client_config(self):
+		stats.statsct.Statsct.initialize()
+		self.clientConfig = SchcConfig.SchcConfig(self.role, self.size_l2_mtu, self.clientSend)
 
+	def send_message(self):
 
-    def send(self, message):
-      print("Message to Server", message)
-      self.soc.send(message)
-      sleep(1)
-      #messageRecvd = self.ReceiveUntil(1)
-      #return messageRecvd
+		payload = bytearray(range(1, 1 + self.size_message))  # 14 bytes
+		print("Payload size:", len(payload))
+		print("Payload: {}".format(b2hex(payload)))
+		print("")
 
-    def Receive(self):
-      currentMsg = ''
-      try:
-        print("Ready to receive a message")
-        currentMsg = self.soc.recv(2048)
-      except:
-        print("Any message from server")
-      sleep(1)
-      return currentMsg
+		self.clientConfig.node0.protocol.layer3.send_later(1, 1, payload)
+		self.clientConfig.sim.run()
 
-      # # if self.verbosity >= 2: ("       #method ReceiveUntil")
-      # iterCount = timeOut / 0.15
-      # #		self.ser.timeout = 0.1
-      # currentMsg = ''
-      # status = ''
-      # while iterCount >= 0 and "SUCCESS" not in status:
-      #   sleep(0.1)
-      #   #			while self.ser.inWaiting() > 0 : # bunch of data ready for reading
-      #   currentMsg = self.soc.recv(2048)
-      #   if currentMsg != '':
-      #     status = "SUCCESS"
-      #   iterCount -= 1
-      #   print("Message from Server", currentMsg)
-      #
-      # if currentMsg != b"SUCCESS":
-      #   return currentMsg
-      # return ''
+	def client(self):
+		iteration = 1
+		while True:
+			print("")
+			print("--------------- Iteration: ", iteration, " -----------------------")
+			self.send_message()
+			self.clientConfig.configSim()
+			# self.schc_config.node0.protocol.layer2.set_role(self.role)
+			sleep(10)
+			iteration += 1
 
-    def close(self):
-      if self.ser.isOpen():
-        self.ser.close()
+		# close the connection 
+		#self.socketClientConnection.close()
