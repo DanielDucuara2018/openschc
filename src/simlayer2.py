@@ -5,9 +5,6 @@
 #---------------------------------------------------------------------------
 #from stats.statsct import Statsct
 
-import ClientConnection as ClientConnection
-import ServerConnection as ServerConnection
-
 class SimulLayer2:
     """
     The layer 2 of LPWA is not symmetry.
@@ -31,27 +28,17 @@ class SimulLayer2:
         self.counter = 1 # XXX: replace with is_transmitting?
         self.is_transmitting = False
         self.packet_queue = []
-        self.ip = None
-        self.portIp = None
-        self.clientConnection = None
-        self.serverConnection = None
         self.mtu = 56
         self.role = None
+        self.clientSend = None
 
-
-    def set_role(self,role):
+    def set_role(self, role, clientSend):
         self.role = role
         if self.role == 'client':
             print("I'm a client")
-            self.ip = "127.0.0.1"
-            self.portIp = 12345
-            self.clientConnection = ClientConnection.ClientConnection(self.ip, self.portIp)
+            self.clientSend = clientSend
         elif self.role == 'server':
             print("I'm a server")
-            self.ip = "127.0.0.1"
-            self.portIp = 12345
-            self.serverConnection = ServerConnection.ServerConnection(self.ip, self.portIp)
-
 
     def _set_protocol(self, protocol):
         self.protocol = protocol

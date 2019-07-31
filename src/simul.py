@@ -19,6 +19,8 @@ import schc
 
 from stats.statsct import Statsct
 
+import ClientSend
+
 enable_statsct = True
 
 Link = namedtuple("Link", "from_id to_id delay")
@@ -183,14 +185,16 @@ class Simul:
             count = 1
             # for link in link_list:
             #     count += self.send_packet_on_link(link, packet)
-            self.node_table[0].protocol.layer2.clientConnection.send(packet)
+            note_table_list = list(self.node_table.items())[-1][1]
+            #self.node_table[0].protocol.layer2.clientSend.send(packet)
+            note_table_list.protocol.layer2.clientSend.send(packet)
             try:
-                state = self.node_table[0].protocol.fragment_session.session_list[0]["session"].state
+                state = note_table_list.protocol.fragment_session.session_list[0]["session"].state
                 print("STATE : ", state)
                 if state == self.SEND_ALL_1:
-                    messageRecvd = self.node_table[0].protocol.layer2.clientConnection.Receive()
+                    messageRecvd = note_table_list.protocol.layer2.clientSend.Receive()
                     print(messageRecvd)
-                    self.node_table[0].protocol.layer2.event_receive_packet(self.node_table[0].id, messageRecvd)
+                    note_table_list.protocol.layer2.event_receive_packet(note_table_list.id, messageRecvd)
             except:
                 print("Not fragment state")
         else:
