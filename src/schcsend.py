@@ -37,12 +37,15 @@ class FragmentBase():
         self.ack_requests_counter = 0
         self.resend = False
         self.all1_send = False
+        self.number_tiles_send = 0
+        self.all_tiles = None
         self.state = "START"
         self.ACK_SUCCESS = "ACK_SUCCESS"
         self.ACK_FAILURE = "ACK_FAILURE"
         self.RECEIVER_ABORT = "RECEIVER_ABORT"
         self.SEND_ALL_1 = "SEND_ALL_1"
         self.WAITING_FOR_ACK = "WAITING_FOR_ACK"
+        self.ACK_TIMEOUT = "ACK_TIMEOUT"
         self.schc_all_1 = None
         self.last_window_tiles = None
         self.num_of_windows = 0
@@ -275,7 +278,7 @@ class FragmentAckOnError(FragmentBase):
         print("all1_send-> {}, resend -> {}, state -> {}".format(self.all1_send, self.resend,self.state))
         print("all tiles unsend -> {}".format(self.all_tiles))
         for tile in self.all_tiles.get_all_tiles():
-            print("w: {}, t: {}, sent: {}".format(tile['w-num'],tile['t-num'],tile['sent']))
+            print("w: {}, t: {}, sent: {}".format(tile['w-num'], tile['t-num'], tile['sent']))
         print("")
         # if self.state == self.ACK_FAILURE and self.num_of_windows != 1 and self.number_of_ack_waits <= self.num_of_windows:
         #     #waiting for the acks of the others windows
@@ -403,6 +406,7 @@ class FragmentAckOnError(FragmentBase):
                 if enable_statsct:
                     Statsct.set_msg_type("SCHC_FRAG")
                     Statsct.set_header_size(schcmsg.get_sender_header_size(self.rule))
+
             schc_frag = schcmsg.frag_sender_tx(
                     self.rule, dtag=self.dtag,
                     win=window_tiles[0]["w-num"],
@@ -487,6 +491,7 @@ class FragmentAckOnError(FragmentBase):
     def ack_timeout(self, *args):
         self.cancel_ack_wait_timer()
         print("----------------------- ACK timeout -----------------------  ")
+        self.state = self.ACK_TIMEOUT
         assert len(args) == 2
         assert isinstance(args[0], schcmsg.frag_sender_tx)
         assert isinstance(args[1], int)
@@ -517,7 +522,9 @@ class FragmentAckOnError(FragmentBase):
         # # retransmit MIC.
         args = (schc_frag.packet.get_content(), self.context["devL2Addr"],
                 self.event_sent_frag)
+        print("")
         print("MESSSAGE TYPE ----> SCHC ACK REQ frag:", schc_frag.__dict__)
+        print("")
         self.protocol.scheduler.add_event(0, self.protocol.layer2.send_packet,
                                         args)
         """ waits for all the acks before sending the ack request
@@ -572,11 +579,20 @@ class FragmentAckOnError(FragmentBase):
                     self.rule.ruleID, self.dtag))
             #self.resend = False
             self.state = self.ACK_SUCCESS
-            f = open("client_server_simulation.txt", "a+")
+
+            # f = open("client_server_simulation.txt", "a+")
+            # seconds = time. time()
+            # #local_time = time.ctime(seconds)
+            # f.write("%d\r\n" % seconds)
+            # f.close()
+
+            f = open("client_server_simulation.txt", "r+")
+            content = f.read()
             seconds = time. time()
-            #local_time = time.ctime(seconds)
-            f.write("%d\r\n" % seconds)
+            f.seek(0, 0)
+            f.write(str(int(seconds)) + '\n' + content)
             f.close()
+
             return
         if schc_frag.cbit == 0:
             print("----------------------- ACK Failure rid={} dtag={} -----------------------".format(
@@ -586,7 +602,9 @@ class FragmentAckOnError(FragmentBase):
             self.state = self.ACK_FAILURE
             self.resend_frag(schc_frag)
             return
-        
+
+
+
 
     def resend_frag(self, schc_frag):
         self.resend = True
@@ -594,5 +612,18 @@ class FragmentAckOnError(FragmentBase):
         print("sent bitmap:", (schc_frag.win, self.bit_list[schc_frag.win]))
         self.all_tiles.unset_sent_flag(schc_frag.win,
                                        schc_frag.bitmap.to_bit_list())
+        self.tiles_send()
+        #input()
         self.send_frag()
 
+    def tiles_send(self):
+        for tile in self.all_tiles.get_all_tiles():
+            if not tile['sent']:
+                self.number_tiles_send += 1
+        print("----------- ", self.number_tiles_send, "tiles to send")
+
+    def current_number_tiles_sent(self):
+        if self.number_tiles_send > 0:
+            self.number_tiles_send -= 1
+        print("----------- ", self.number_tiles_send, "tiles to send")
+        return self.number_tiles_send

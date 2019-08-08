@@ -214,6 +214,7 @@ class ReassemblerAckOnError(ReassembleBase):
             #     # XXX needs to release all resources.
             #     return
             print("XXX need sending ACK back.")
+            self.state = 'ACK_REQ'
             #input('')
             self.resend_ack(schc_frag)
             return
@@ -282,6 +283,7 @@ class ReassemblerAckOnError(ReassembleBase):
                 return
             else:
                 self.mic_missmatched = True
+                self.state = 'ERROR_MIC'
                 print("----------------------- ERROR -----------------------")
                 print("ERROR: MIC mismatched. packet {} != result {}".format(
                         schc_frag.mic, mic_calced))
@@ -318,7 +320,7 @@ class ReassemblerAckOnError(ReassembleBase):
                             bitmap=bit_list[bl_index][1])
                     if enable_statsct:
                         Statsct.set_msg_type("SCHC_ACK_KO")
-                    print("----------------------- SCHC ACK KO SEND  -----------------------")
+                    print("----------------------- SCHC ACK KO SEND 1 -----------------------")
 
                     print("ACK failure sent:", schc_ack.__dict__)
                     args = (schc_ack.packet.get_content(),
@@ -350,7 +352,7 @@ class ReassemblerAckOnError(ReassembleBase):
             print("ACK success sent:", schc_ack.__dict__)
             if enable_statsct:
                 Statsct.set_msg_type("SCHC_ACK_OK")
-            print("----------------------- SCHC ACK OK SEND  -----------------------")
+            print("----------------------- SCHC ACK OK SEND 1 -----------------------")
         else:
             if self.all1_received:
                 print("all-1 received, building ACK")
@@ -388,7 +390,7 @@ class ReassemblerAckOnError(ReassembleBase):
                             bitmap=bit_list[bl_index][1])
                     if enable_statsct:
                         Statsct.set_msg_type("SCHC_ACK_KO")
-                    print("----------------------- SCHC ACK KO SEND  -----------------------")
+                    print("----------------------- SCHC ACK KO SEND 2 -----------------------")
  
                     print("----ACK failure sent:", schc_ack.__dict__)
                     break
@@ -432,7 +434,7 @@ class ReassemblerAckOnError(ReassembleBase):
                             bitmap=bit_list[bl_index][1])
                     if enable_statsct:
                         Statsct.set_msg_type("SCHC_ACK_KO")
-                    print("----------------------- SCHC ACK KO SEND  -----------------------")
+                    print("----------------------- SCHC ACK KO SEND 3 -----------------------")
  
                     print("----ACK failure sent:", schc_ack.__dict__)
                     break 
@@ -461,7 +463,7 @@ class ReassemblerAckOnError(ReassembleBase):
         print("ACK success sent:", schc_ack.__dict__)
         if enable_statsct:
             Statsct.set_msg_type("SCHC_ACK_OK")
-        print("----------------------- SCHC ACK OK SEND  -----------------------")
+        print("----------------------- SCHC ACK OK SEND 2 -----------------------")
         args = (schc_ack.packet.get_content(), self.context["devL2Addr"])
         self.protocol.scheduler.add_event(0,
                                             self.protocol.layer2.send_packet,

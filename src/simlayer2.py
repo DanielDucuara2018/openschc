@@ -30,15 +30,19 @@ class SimulLayer2:
         self.packet_queue = []
         self.mtu = 56
         self.role = None
-        self.clientSend = None
+        #self.clientSend = None
+        #self.serverSend = None
+        self.roleSend = None
 
-    def set_role(self, role, clientSend):
+    def set_role(self, role, roleSend):
         self.role = role
-        if self.role == 'client':
-            print("I'm a client")
-            self.clientSend = clientSend
-        elif self.role == 'server':
-            print("I'm a server")
+        self.roleSend = roleSend
+        # if self.role == 'client':
+        #     print("I'm a client")
+        #     self.clientSend = roleSend
+        # elif self.role == 'server':
+        #     print("I'm a server")
+        #     self.serverSend = roleSend
 
     def _set_protocol(self, protocol):
         self.protocol = protocol

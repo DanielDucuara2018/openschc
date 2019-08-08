@@ -8,7 +8,7 @@ from base_import import *
 from simsched import SimulScheduler as Scheduler
 from simlayer2 import SimulLayer2
 from cond_true import ConditionalTrue
-#import schcsend as schcsend
+from time import sleep
 
 try:
     import utime as time
@@ -103,6 +103,7 @@ class Simul:
         self.RECEIVER_ABORT = "RECEIVER_ABORT"
         self.SEND_ALL_1 = "SEND_ALL_1"
         self.WAITING_FOR_ACK = "WAITING_FOR_ACK"
+        self.ACK_TIMEOUT = "ACK_TIMEOUT"
 
         self.simul_config = simul_config
         self.node_table = {}
@@ -187,14 +188,23 @@ class Simul:
             #     count += self.send_packet_on_link(link, packet)
             note_table_list = list(self.node_table.items())[-1][1]
             #self.node_table[0].protocol.layer2.clientSend.send(packet)
-            note_table_list.protocol.layer2.clientSend.send(packet)
+
+            note_table_list.protocol.layer2.roleSend.send(packet)
+
+            number_tiles_send = \
+                note_table_list.protocol.fragment_session.session_list[0]["session"].current_number_tiles_sent()
+
             try:
                 state = note_table_list.protocol.fragment_session.session_list[0]["session"].state
                 print("STATE : ", state)
-                if state == self.SEND_ALL_1:
-                    messageRecvd = note_table_list.protocol.layer2.clientSend.Receive()
-                    print(messageRecvd)
-                    note_table_list.protocol.layer2.event_receive_packet(note_table_list.id, messageRecvd)
+                print("Lenght queue", len(self.scheduler.queue))
+                if (state == self.SEND_ALL_1 or state == self.ACK_FAILURE or state == self.ACK_TIMEOUT) \
+                        and number_tiles_send == 0:
+                    print("------------------------------- RECEIVE PACKET ------------------------------")
+                    message = note_table_list.protocol.layer2.roleSend.Receive()
+                    print("Message from Server", message)
+                    note_table_list.protocol.layer2.event_receive_packet(note_table_list.id, message)
+                    # note_table_list.protocol.fragment_session.session_list[0]["session"].state = 'START'
             except:
                 print("Not fragment state")
         else:
