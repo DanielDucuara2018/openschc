@@ -222,30 +222,82 @@ class ReassemblerAckOnError(ReassembleBase):
         self.fragment_received = True
         # append the payload to the tile list.
         # padding truncation is done later. see below.
-        nb_tiles = schc_frag.payload.count_added_bits()//self.rule["tileSize"]
+        #nb_tiles = schc_frag.payload.count_added_bits()//self.rule["tileSize"]
+        nb_tiles, last_tile_size = (
+                schc_frag.payload.count_added_bits() // self.rule["tileSize"],
+                schc_frag.payload.count_added_bits() % self.rule["tileSize"])
+        print("---------nb_tiles: ", nb_tiles," -----last_tile_size ", last_tile_size)
+        tiles = [schc_frag.payload.get_bits_as_buffer(self.rule["tileSize"]) for _ in range(nb_tiles)]
+        print("---------tiles: ", tiles)
+
         # Note that nb_tiles is the number of tiles which is exact number of the
         # size of the tile.  the tile of which the size is less than the size
         # is not included.
         # The tile that is less than a tile size must be included, so a 1 can be added
         # in the bitmap when there is a tile in the all-1 message
-        if schc_frag.payload.count_added_bits()%self.rule["tileSize"] != 0:
-            #tile found that is smaller than a normal tile
-            print("tile found that is smaller than a normal tile")
-            nb_tiles = 1
-        #tile should only be append if it is not in the list
-        tile_in_list = False
-        for tile in self.tile_list:
-            if tile["w-num"] == schc_frag.win:
-                if tile["t-num"] == schc_frag.fcn:
-                    print("tile is already in tile list")
-                    tile_in_list = True
-        if not tile_in_list:
-            self.tile_list.append({
-                    "w-num": schc_frag.win,
-                    "t-num": schc_frag.fcn,
-                    "nb_tiles": nb_tiles,
-                    "raw_tiles":schc_frag.payload})
-            self.tile_list = sort_tile_list(self.tile_list, self.rule["FCNSize"])
+
+        win = schc_frag.win
+        fcn = schc_frag.fcn
+        for tile_in_tiles in tiles:
+            idx = tiles.index(tile_in_tiles)
+            if tile_in_tiles.count_added_bits()%self.rule["tileSize"] != 0:
+                #tile found that is smaller than a normal tile
+                print("tile found that is smaller than a normal tile")
+                #nb_tiles = 1
+            #tile should only be append if it is not in the list
+            tile_in_list = False
+            for tile in self.tile_list:
+                if tile["w-num"] == win:
+                    if tile["t-num"] == fcn- idx:
+                        print("tile is already in tile list")
+                        tile_in_list = True
+            if not tile_in_list:
+                self.tile_list.append({
+                        "w-num": win,
+                        "t-num": fcn - idx,
+                        "nb_tiles": 1,
+                        "raw_tiles": tile_in_tiles})
+                self.tile_list = sort_tile_list(self.tile_list, self.rule["FCNSize"])
+            if (fcn - idx) == 0:
+                win += 1
+                fcn = self.rule["FCNSize"] << 1
+                tiles = tiles[(idx+1):]
+
+        if last_tile_size > 5:
+            last_tile = schc_frag.payload.get_bits_as_buffer(last_tile_size)
+            print('---------tile:', last_tile)
+            tile_in_list = False
+            for tile in self.tile_list:
+                if tile["w-num"] == win:
+                    if tile["t-num"] == 7:
+                        print("tile is already in tile list")
+                        tile_in_list = True
+            if not tile_in_list:
+                self.tile_list.append({
+                    "w-num": win,
+                    "t-num": 7,
+                    "nb_tiles": 1,
+                    "raw_tiles": last_tile})
+                self.tile_list = sort_tile_list(self.tile_list, self.rule["FCNSize"])
+
+        # if schc_frag.payload.count_added_bits()%self.rule["tileSize"] != 0:
+        #     #tile found that is smaller than a normal tile
+        #     print("tile found that is smaller than a normal tile")
+        #     #nb_tiles = 1
+        # #tile should only be append if it is not in the list
+        # tile_in_list = False
+        # for tile in self.tile_list:
+        #     if tile["w-num"] == schc_frag.win:
+        #         if tile["t-num"] == schc_frag.fcn:
+        #             print("tile is already in tile list")
+        #             tile_in_list = True
+        # if not tile_in_list:
+        #     self.tile_list.append({
+        #             "w-num": schc_frag.win,
+        #             "t-num": schc_frag.fcn,
+        #             "nb_tiles": nb_tiles,
+        #             "raw_tiles":schc_frag.payload})
+        #     self.tile_list = sort_tile_list(self.tile_list, self.rule["FCNSize"])
         for tile in self.tile_list:
             print("w-num: {} t-num: {} nb_tiles:{}".format(
                     tile['w-num'],tile['t-num'],tile['nb_tiles']))
@@ -273,7 +325,7 @@ class ReassemblerAckOnError(ReassembleBase):
         elif schc_frag.fcn == schcmsg.get_fcn_all_1(self.rule):
             print("----------------------- ALL1 received -----------------------")
             self.all1_received = True
-            #Statsct.set_msg_type("SCHC_ALL_1")
+            Statsct.set_msg_type("SCHC_ALL_1")
             self.mic_received = schc_frag.mic
             schc_packet, mic_calced = self.get_mic_from_tiles_received()
             print("schc_frag.mic: {}, mic_calced: {}".format(schc_frag.mic,mic_calced))

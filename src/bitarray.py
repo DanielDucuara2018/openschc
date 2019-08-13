@@ -14,7 +14,7 @@ class BitBuffer:
         """ BitBuffer manage a buffer bit per bit.
         The content should be either a list or a bytearray.
         If the content is a list, each item (0 or others) is dealt as a bit.
-        Or, the content should be any objects which can be passed to bytes
+        Or, t should be any objects which can be passed to bytes
         or bytearray.
 
         _content: bytearray holding the bits including padding.

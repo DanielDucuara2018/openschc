@@ -6,7 +6,7 @@
 
 from base_import import *  # used for now for differing modules in py/upy
 
-import schc
+import math
 import schcmsg
 from schctile import TileList
 from schcbitmap import make_bit_list
@@ -620,6 +620,7 @@ class FragmentAckOnError(FragmentBase):
         for tile in self.all_tiles.get_all_tiles():
             if not tile['sent']:
                 self.number_tiles_send += 1
+        self.number_tiles_send = math.ceil(self.number_tiles_send / (self.protocol.layer2.get_mtu_size() // self.rule['tileSize']))
         print("----------- ", self.number_tiles_send, "tiles to send")
 
     def current_number_tiles_sent(self):
