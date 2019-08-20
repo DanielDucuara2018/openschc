@@ -36,7 +36,7 @@ frag_rule1 = {
             "WSize":3, # Number of tiles per window
             "FCNSize": 3, # 2^3-2 .. 0 number of sequence de each tile
             "ackBehavior": "afterAll1",
-            "tileSize": 392, # size of each tile -> 9 bits or 392 bits
+            "tileSize": 192, # size of each tile -> 9 bits or 392 bits
             "MICAlgorithm": "crc32",
             "MICWordSize": 8
         }
@@ -54,7 +54,7 @@ frag_rule2 = {
             "WSize": 3, # Number of tiles per window
             "FCNSize": 3, # 2^3-2 .. 0 number of sequence de each tile
             "ackBehavior": "afterAll1",
-            "tileSize": 392, # size of each tile -> e.g. 9 bits or 392 bits
+            "tileSize": 192, # size of each tile -> e.g. 9 bits or 392 bits
             "MICAlgorithm": "crc32",
             "MICWordSize": 8
         }
@@ -99,7 +99,7 @@ frag_rule4 = {
 # Main configuration
 
 ack_on_error = True
-packet_loss_simulation = True
+packet_loss_simulation = False
 payload_file_simulation = False # Configure the rules, l2_mtu and SF to support the use of a 1400 bytes file
 
 #--------------------------------------------------

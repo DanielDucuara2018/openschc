@@ -9,7 +9,7 @@
             "WSize":3,
             "FCNSize": 3,
             "ackBehavior": "afterAll1",
-            "tileSize": 392,
+            "tileSize": 49,
             "MICAlgorithm": "crc32",
             "MICWordSize": 8
         }
