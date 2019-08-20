@@ -469,6 +469,7 @@ class FragmentAckOnError(FragmentBase):
                 Statsct.set_header_size(schcmsg.get_sender_header_size(self.rule) +
                         schcmsg.get_mic_size(self.rule))
             self.schc_all_1 = schc_frag
+            self.state = self.SEND_ALL_1
             self.event_id_ack_wait_timer = self.protocol.scheduler.add_event(
                     self.ack_wait_timer, self.ack_timeout, args)
             print("*******event id {}".format(self.event_id_ack_wait_timer))

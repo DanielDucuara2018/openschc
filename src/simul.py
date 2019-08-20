@@ -173,7 +173,7 @@ class Simul:
         return count
 
     def send_packetX(self, packet, src_id, dst_id=None, callback=None, callback_args=tuple()):
-        """send a message to another device"""
+        """send a message to another device in a client - server Simulation"""
         self._log("----------------------- SEND PACKET -----------------------")
         if not self.frame_loss.check(len(packet)):
             self._log("----------------------- OK -----------------------")
@@ -191,10 +191,9 @@ class Simul:
 
             note_table_list.protocol.layer2.roleSend.send(packet)
 
-            number_tiles_send = \
-                note_table_list.protocol.fragment_session.session_list[0]["session"].current_number_tiles_sent()
-
             try:
+                number_tiles_send = \
+                    note_table_list.protocol.fragment_session.session_list[0]["session"].current_number_tiles_sent()
                 state = note_table_list.protocol.fragment_session.session_list[0]["session"].state
                 print("STATE : ", state)
                 print("Lenght queue", len(self.scheduler.queue))

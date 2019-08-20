@@ -3,7 +3,7 @@
    :platform: Python, Micropython
 """
 #---------------------------------------------------------------------------
-#from stats.statsct import Statsct
+from stats.statsct import Statsct
 
 class SimulLayer2:
     """
@@ -30,23 +30,15 @@ class SimulLayer2:
         self.packet_queue = []
         self.mtu = 56
         self.role = None
-        #self.clientSend = None
-        #self.serverSend = None
         self.roleSend = None
 
     def set_role(self, role, roleSend):
         self.role = role
         self.roleSend = roleSend
-        # if self.role == 'client':
-        #     print("I'm a client")
-        #     self.clientSend = roleSend
-        # elif self.role == 'server':
-        #     print("I'm a server")
-        #     self.serverSend = roleSend
 
     def _set_protocol(self, protocol):
         self.protocol = protocol
-        #Statsct.addInfo('protocol', protocol.__dict__)
+        Statsct.addInfo('protocol', protocol.__dict__)
 
     def set_receive_callback(self, receive_function):
         self.receive_function = receive_function

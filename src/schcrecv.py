@@ -248,7 +248,7 @@ class ReassemblerAckOnError(ReassembleBase):
             tile_in_list = False
             for tile in self.tile_list:
                 if tile["w-num"] == win:
-                    if tile["t-num"] == fcn- idx:
+                    if tile["t-num"] == fcn - idx:
                         print("tile is already in tile list")
                         tile_in_list = True
             if not tile_in_list:
@@ -359,6 +359,8 @@ class ReassemblerAckOnError(ReassembleBase):
                                                 schcmsg.get_fcn_all_1(self.rule))
                     #print("new bit list, should it work???")
                     #input("")
+
+                print("----------------------- SCHC ACK KO SEND 1 -----------------------")
                 for bl_index in range(len(bit_list)):
                     print("missing wn={} bitmap={}".format(bit_list[bl_index][0],
                                                            bit_list[bl_index][1]))
@@ -372,7 +374,6 @@ class ReassemblerAckOnError(ReassembleBase):
                             bitmap=bit_list[bl_index][1])
                     if enable_statsct:
                         Statsct.set_msg_type("SCHC_ACK_KO")
-                    print("----------------------- SCHC ACK KO SEND 1 -----------------------")
 
                     print("ACK failure sent:", schc_ack.__dict__)
                     args = (schc_ack.packet.get_content(),
@@ -380,7 +381,7 @@ class ReassemblerAckOnError(ReassembleBase):
                     self.protocol.scheduler.add_event(
                             0, self.protocol.layer2.send_packet, args)
                     # XXX need to keep the ack message for the ack request.
-                    break
+                    # break # problema con este break
         # set inactive timer.
         self.event_id_inactive_timer = self.protocol.scheduler.add_event(
                 self.inactive_timer, self.event_inactive, tuple())
