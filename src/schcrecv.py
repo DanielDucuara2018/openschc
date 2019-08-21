@@ -263,7 +263,7 @@ class ReassemblerAckOnError(ReassembleBase):
                 fcn = self.rule["FCNSize"] << 1
                 tiles = tiles[(idx+1):]
 
-        if last_tile_size > 5:
+        if last_tile_size > 8:
             last_tile = schc_frag.payload.get_bits_as_buffer(last_tile_size)
             print('---------tile:', last_tile)
             tile_in_list = False
@@ -381,7 +381,7 @@ class ReassemblerAckOnError(ReassembleBase):
                     self.protocol.scheduler.add_event(
                             0, self.protocol.layer2.send_packet, args)
                     # XXX need to keep the ack message for the ack request.
-                    # break # problema con este break
+                    break # problema con este break
         # set inactive timer.
         self.event_id_inactive_timer = self.protocol.scheduler.add_event(
                 self.inactive_timer, self.event_inactive, tuple())

@@ -581,12 +581,6 @@ class FragmentAckOnError(FragmentBase):
             #self.resend = False
             self.state = self.ACK_SUCCESS
 
-            # f = open("client_server_simulation.txt", "a+")
-            # seconds = time. time()
-            # #local_time = time.ctime(seconds)
-            # f.write("%d\r\n" % seconds)
-            # f.close()
-
             f = open("client_server_simulation.txt", "r+")
             content = f.read()
             seconds = time. time()
