@@ -232,9 +232,8 @@ Given the first bits received from the LPWAN, returns either a fragmentation or 
 from base_import import *
 from copy import deepcopy
 from schccomp import *
-import binascii
 import ipaddress
-import pprint
+
 
 # XXX to be checked whether they are needed.
 DEFAULT_FRAGMENT_RID = 1
